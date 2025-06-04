@@ -1,0 +1,176 @@
+CREATE TABLE users
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	nickname TEXT,
+	first_name TEXT,
+	last_name TEXT,
+	user_id BIGINT,
+	date_registration TIMESTAMP WITHOUT TIME ZONE,
+	blocked BOOLEAN,
+	localization TEXT
+);
+
+CREATE TABLE managers
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	manager_id BIGINT,
+	category_id INT
+);
+
+CREATE TABLE categories
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	category_name CHARACTER VARYING(100),
+	localization TEXT,
+	father BIGINT
+);
+
+CREATE TABLE shown_appeals
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	category_id BIGINT,
+	question_text CHARACTER VARYING(2000),
+	answer_text CHARACTER VARYING(2000),
+	localization TEXT
+);
+
+CREATE TABLE appeals
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	appeal_id BIGINT,
+	user_id BIGINT,
+	manager_id BIGINT,
+	category_id BIGINT,
+	question_text CHARACTER VARYING(2000),
+	localization TEXT,
+	date_create TIMESTAMP WITHOUT TIME ZONE,
+	date_get_in_work TIMESTAMP WITHOUT TIME ZONE,
+	status TEXT
+);
+
+CREATE TABLE settings
+(
+	token TEXT PRIMARY KEY,
+	date_created DATE,
+	min_time_between_appeals INT,
+	max_count_appeals INT,
+	advertisement BOOLEAN,
+	text_under_shown_appeal_to_create BOOLEAN,
+	owner_id BIGINT,
+	rate TEXT,
+	status TEXT
+);
+
+CREATE TABLE appeal_notices
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	appeal_id BIGINT,
+	message_id BIGINT,
+	user_id BIGINT,
+	is_manager BOOLEAN
+);
+
+CREATE TABLE appeal_history
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	appeal_id BIGINT,
+	date_send TIMESTAMP WITHOUT TIME ZONE,
+	message_text TEXT,
+	user_id BIGINT,
+	is_manager BOOLEAN
+);
+
+CREATE TABLE mailings (
+    token TEXT,
+    mailing_id INTEGER NOT NULL,
+    mailing_name TEXT,
+    mailing_text TEXT,
+    mailing_media_array TEXT,
+    mailing_create_date TEXT,
+    mailing_total_sent INTEGER DEFAULT 0,
+    mailing_ok_sent INTEGER DEFAULT 0,
+    mailing_error_sent INTEGER DEFAULT 0,
+    mailing_complete INTEGER DEFAULT 0,
+    mailing_status TEXT
+);
+
+CREATE TABLE new_messages
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	appeal_id BIGINT,
+	text TEXT
+);
+
+CREATE TABLE from_website
+(
+	token TEXT,
+	id SERIAL PRIMARY KEY,
+	appeal_id BIGINT,
+	type TEXT,
+	category_id BIGINT
+);
+
+CREATE OR REPLACE FUNCTION get_category_main_father(tg_token TEXT, category_id BIGINT)
+	RETURNS BIGINT
+	LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	father_id BIGINT;
+	father_category_id BIGINT;
+BEGIN
+	SELECT id, father
+	INTO father_category_id, father_id
+	FROM categories
+	WHERE token = tg_token AND id = category_id;
+	WHILE father_id !=0 LOOP
+		SELECT id, father
+		INTO father_category_id, father_id
+		FROM categories
+		WHERE token = tg_token AND id = father_id;
+	END LOOP;
+	RETURN father_category_id;
+END;
+$$;
+
+INSERT INTO settings VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', '2023-11-05', 5, 99, true, true, 641825727, 'бесплатный', 'включен');
+
+INSERT INTO managers (token, manager_id, category_id) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 641825727, 0);
+INSERT INTO managers (token, manager_id, category_id) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 641825727, 1);
+
+INSERT INTO categories (token, category_name, localization, father) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 'главное меню', 'ru', 0);
+INSERT INTO categories (token, category_name, localization, father) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 'секция спорта', 'ru', 0);
+INSERT INTO categories (token, category_name, localization, father) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 'универ', 'ru', 0);
+INSERT INTO categories (token, category_name, localization, father) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 'меню', 'ru', 1);
+INSERT INTO categories (token, category_name, localization, father) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 'внутри', 'ru', 4);
+
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'что это', 'это меню', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'как', 'вот так', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'зачем', 'затем', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'почему', 'потому', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'когда', 'тогда', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'где', 'везде', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'что', 'то', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'я устал писать вопросы', 'жаль меня', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, '1', '2', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, '3', '4', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, '5', '8', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, '6', '9', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, '7', '10', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 1, 'ярослав молодец?', 'безусловно', 'ru');
+
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 2, 'а', 'б', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 2, 'в', 'г', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 2, 'д', 'е', 'ru');
+
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 3, 'a', 'b', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 3, 'c', 'd', 'ru');
+INSERT INTO shown_appeals (token, category_id, question_text, answer_text, localization) VALUES ('6353026522:AAGREBRShS_G8yYK93my6fOSDQgLDhUPyqc', 3, 'e', 'f', 'ru');
